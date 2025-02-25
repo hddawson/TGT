@@ -1,0 +1,20 @@
+python code for making a series of plots showing each gusset:
+
+import matplotlib.pyplot as plt
+
+# Create a heatmap for each gusset's temperature data
+fig, axes = plt.subplots(n_gussets, 1, figsize=(10, 20))
+
+for i in range(n_gussets):
+    ax = axes[i]
+    # Display each gusset's temperature data as a heatmap
+    cax = ax.imshow(dummy_data[i], aspect='auto', cmap='coolwarm', vmin=-5, vmax=20)
+    ax.set_title(f'Gusset {i+1}')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_xlabel('X Coordinate')
+    fig.colorbar(cax, ax=ax)  # Add color bar to each subplot
+
+plt.tight_layout()  # Adjust layout to avoid overlap
+plt.show()
+
+
