@@ -10,7 +10,7 @@ def process_hobo_files(folder_path):
 
     # Loop through all files in the folder
     for filename in os.listdir(folder_path):
-        if filename.endswith('.csv'):
+        if filename.endswith('.xlsx'):
             # Extract the device number from the filename
             device = filename.split()[0]
 
@@ -18,7 +18,7 @@ def process_hobo_files(folder_path):
             file_path = os.path.join(folder_path, filename)
 
             # Read the CSV file
-            df = pd.read_csv(file_path)
+            df = pd.read_excel(file_path)
 
             # Keep only the necessary columns by index (2nd and 3rd columns) and rename them
             df = df.iloc[:, [1, 2]]
@@ -39,7 +39,7 @@ def process_hobo_files(folder_path):
     return final_df
 
 # Specify the folder containing your HOBO files
-folder_path = "data/HOBO_data/fwdtgttrial5"
+folder_path = "data/HOBO_data/hobodatatgt6"
 
 # Process the files
 result_df = process_hobo_files(folder_path)
@@ -53,5 +53,5 @@ print(result_df)
 
 
 # Optionally, save the DataFrame to a CSV file
-result_df.to_csv("data/compiled_hobo_data.csv", index=False)
+result_df.to_csv("data/compiled_hobo_data_tgt6.csv", index=False)
 

@@ -1,39 +1,75 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
 
 data = pd.read_csv("data/compiled_hobo_data_tgt6.csv")
 
-#how many unqiue devices are there?
+# How many unique devices are there?
 print(data['device'].nunique())
 
 # Convert the 'time' column to datetime format
 data['time'] = pd.to_datetime(data['time'])
 
-#convert the time column to hours from the start
+# Convert the time column to hours from the start
 data['time'] = (data['time'] - data['time'].min()).dt.total_seconds() / 3600
 
-start_time = 2652  # in hours
-end_time = 3164   # in hours
+start_time = 2655  # in hours
+end_time = 3164    # in hours
 
 # Filter data within the specified time frame
 filtered_data = data[(data['time'] >= start_time) & (data['time'] <= end_time)]
 
-# Plot the filtered data
-plt.figure(figsize=(30, 6))
-for device, device_data in filtered_data.groupby('device'):
-    plt.plot(device_data['time'], device_data['temp'], label=device)
+# Determine the hour (out of 24 for each point) and day
+filtered_data['hour'] = (filtered_data['time'] - 8) % 24
+filtered_data['day'] = ((filtered_data['time'] - 8) // 24).astype(int)
 
-# Rotate the x-axis labels
-plt.xticks(rotation=45)
+# Create a color mapping for gusset values (assumed to be integers from 1 to 8)
+unique_gussets = sorted(filtered_data['gusset'].unique())  # e.g., [1, 2, ..., 8]
+# Use the Set1 colormap (designed for categorical data)
+cmap = plt.cm.get_cmap('Set1', len(unique_gussets))
+gusset_color_map = {gusset: cmap(i) for i, gusset in enumerate(unique_gussets)}
 
-# Add more x ticks and a grid
-plt.xticks(range(start_time, end_time + 1, 4))
+# Create custom legend handles for gusset colors
+legend_handles = [mpatches.Patch(color=gusset_color_map[g], label=f"Gusset {g}")
+                  for g in unique_gussets]
+
+# Create an extra legend handle for dotted lines (sensor at soil-air-interface)
+sensor_handle = Line2D([0], [0], color='black', linestyle=':', label='Sensor at \n soil-air-interface')
+sensor_handle2 = Line2D([0], [0], color='black', linestyle='-', label='Sensor at \n 1" depth')
+
+plt.figure(figsize=(10, 12))
+# Group by device and day, then plot each time-series colored by its gusset value
+for (device, day), group in filtered_data.groupby(['device', 'day']):
+    # Assuming gusset is constant within each group:
+    gusset_value = group['gusset'].iloc[0]
+    if device in ["B09", "B10", "B19", "B20"]:
+        plt.plot(group['hour'], group['temp'],
+                 label=f"{device} (Day {day})",
+                 linestyle=':',
+                 color=gusset_color_map[gusset_value])
+    else:
+        plt.plot(group['hour'], group['temp'],
+                 label=f"{device} (Day {day})",
+                 linestyle='-',
+                 color=gusset_color_map[gusset_value])
+
+# Rotate the x-axis labels and add more x ticks and a grid
+plt.xticks(range(0, 24, 1), rotation=45)
 plt.grid()
 plt.ylabel('Temperature (°C)')
-plt.title('HOBO Temperature Data (Limited Time Frame)')
-plt.legend()
-plt.savefig("plots/hobo_temperature_plot_tgt6.pdf")
+plt.xlabel('Time of day (hours since midnight)')
+plt.title('HOBO Temperature Data (21 Successive Days)')
+
+# Combine the gusset legend handles and the sensor handle
+all_handles = legend_handles + [sensor_handle] + [sensor_handle2]
+plt.legend(handles=all_handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+plt.tight_layout()
+plt.savefig("plots/day_hobo_temperature_plot_tgt6.pdf")
+plt.show()
+
 
 #clear the plot
 plt.clf()
@@ -110,6 +146,7 @@ plt.xlabel('Time (hours)')
 plt.title('Mean Table Temperature with Average Across Experiments')
 plt.legend()
 plt.savefig("plots/mean_table_temperature_plot_experiments_no_rolling.pdf")
+
 
 # Loop through each gusset pairing and plot the data, if available, reproducing the plots above but with all devices in one gusset overlain
 for gusset, devices in gusset_pairings.items():
