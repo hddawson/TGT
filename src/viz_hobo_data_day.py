@@ -27,9 +27,12 @@ filtered_data['day'] = ((filtered_data['time'] - 8) // 24).astype(int)
 
 # Create a color mapping for gusset values (assumed to be integers from 1 to 8)
 unique_gussets = sorted(filtered_data['gusset'].unique())  # e.g., [1, 2, ..., 8]
+
 # Use the Set1 colormap (designed for categorical data)
-cmap = plt.cm.get_cmap('Set1', len(unique_gussets))
+cmap = plt.cm.get_cmap('tab10', len(unique_gussets))
 gusset_color_map = {gusset: cmap(i) for i, gusset in enumerate(unique_gussets)}
+
+#print(gusset_color_map[1][0])
 
 # Create custom legend handles for gusset colors
 legend_handles = [mpatches.Patch(color=gusset_color_map[g], label=f"Gusset {g}")
